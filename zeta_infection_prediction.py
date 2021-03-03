@@ -2,19 +2,10 @@
 # coding: utf-8
 
 # In[1]:
-
-
 get_ipython().system('pip install imbalanced-learn')
-
-
 # In[2]:
-
-
 get_ipython().system('pip install xgboost')
-
-
 # In[182]:
-
 
 # Import libraries
 
@@ -52,71 +43,41 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 # In[183]:
-
-
 # Data
 
-df = pd.read_csv("C:\\Users\\bsp19\\carrier\\Data.csv")
-pred_data = pd.read_csv("C:\\Users\\bsp19\\carrier\\Test.csv")
-
+df = pd.read_csv("Data.csv")
+pred_data = pd.read_csv("Test.csv")
 
 # In[184]:
-
-
 df.shape, pred_data.shape
 
-
 # In[185]:
-
-
 df = pd.concat([df, pred_data], ignore_index = True)
 
-
 # In[186]:
-
-
 df.shape
-
 
 # In[188]:
 
-
 #Summary statistics
-
 df.describe()
 
-
 # In[189]:
-
-
 # Nulls in the data set
 df.isnull().sum(axis=0)
 
-
 # In[190]:
-
-
 data = df.copy()
 
-
 # In[191]:
-
-
 # Discarding the records from the final prediction data set.
 df = df[0:800].reset_index(drop=True)
 
-
 # In[192]:
-
-
 # Checking for imbalance in the data with respect to the target variable
-
 sns.countplot(x="zeta_disease", data=df)
 
-
 # In[193]:
-
-
 # Create labels for age and weight
 
 data['age_label'] = np.select([data['age'] < 20,
@@ -131,10 +92,7 @@ data['weight_label'] = np.select([data['weight'] < 100,
                                   data['weight'].between(200,250),
                                   data['weight'] >= 250], [1,2,3,4,5])
 
-
 # In[194]:
-
-
 # Create a label for smoking habits as well
 
 data['smoking'] = np.where(data['years_smoking'] == 0,0,1)
@@ -145,53 +103,31 @@ data['smoking_label'] = np.select([data['years_smoking'] == 0,
                                    data['years_smoking'].between(10,20),
                                    data['years_smoking'] >= 20], [1,2,3,4,5])
 
-
 # In[195]:
-
-
 # Count the number of records per each age and weight group
-
 data['age_weight_class_size'] = data.groupby(by=['age_label','weight_label'])['zeta_disease'].transform('size')
 
-
 # In[196]:
-
-
 # Discarding the records from the final prediction data set.
 df = data[0:800].reset_index(drop=True)
 
-
 # In[197]:
-
-
 sns.catplot(x="age_label", y="age_weight_class_size", hue="weight_label", col="zeta_disease", data=df)
 
-
 # In[198]:
-
-
 sns.catplot(x="age_label", y="age_weight_class_size", hue="weight_label", col="zeta_disease", row="smoking", data=df)
 
-
 # In[199]:
-
-
 sns.catplot(x="zeta_disease", hue="age_label", col="smoking",
             data=df, kind="count",
             height=4, aspect=.7);
 
-
 # In[200]:
-
-
 sns.catplot(x="zeta_disease", hue="age_label", col="smoking", row="weight_label",
             data=df, kind="count",
             height=4, aspect=.7);
 
-
 # In[201]:
-
-
 target_column = ['zeta_disease']
 cat_columns = ['age_label', 'weight_label', 'smoking_label', 'smoking']
 
@@ -200,10 +136,7 @@ for column in df.columns:
     if column not in cat_columns and column not in target_column:
         quant_columns.append(column)
 
-
 # In[202]:
-
-
 plt.figure(figsize=(15, 10))
 
 for i, column in enumerate(cat_columns[0:3], 1):
@@ -213,20 +146,14 @@ for i, column in enumerate(cat_columns[0:3], 1):
     plt.legend()
     plt.xlabel(column)
 
-
 # In[203]:
-
-
 #### 
 #   1. People in age group 30 to 50 (age labels 3 & 4) are more prone to zeta disease.
 #   2. People in weight group 200 to 250 pounds are at higher risk of Zeta disease (weight label 4).
 #   3. People with smoking habits for 3 or more years are more risk than others.
 ####
 
-
 # In[204]:
-
-
 plt.figure(figsize=(15, 10))
 
 for i, column in enumerate(quant_columns, 1):
@@ -236,20 +163,14 @@ for i, column in enumerate(quant_columns, 1):
     plt.legend()
     plt.xlabel(column)
 
-
 # In[205]:
-
-
 #### 
 #   1. For Age, Weight and Smoking habits, earlier interpretation stands the same.
 #   2. Liver stress test of above 1 (mostly 1-1.5 and above 2) is of concern and the risk of disease is high.
 #   3. No similar conclusions can be made with blood pressure. People with blood pressure as high as 125 and greater have not mant zeta disease cases.
 ####
 
-
 # In[206]:
-
-
 plt.figure(figsize=(10, 7))
 
 # Scatter plot with zeta disease cases and no zeta disease cases
@@ -262,10 +183,7 @@ plt.xlabel("Age of the person")
 plt.ylabel("Weight of the person")
 plt.legend(["Zeta disease", "No Zeta disease"]);
 
-
 # In[207]:
-
-
 plt.figure(figsize=(10, 7))
 
 # Scatter plot with zeta disease cases and no zeta disease cases
@@ -280,8 +198,6 @@ plt.legend(["Zeta disease", "No Zeta disease"]);
 
 
 # In[208]:
-
-
 ####
 #   1. The above plot gives away some of the issues in the data. How can a person of age 19 have smoking habits for 22 and 38 years? Clearly, Incorrect entries.
 #   2. Same issue with people between 40 and 45 years of age.
@@ -290,40 +206,25 @@ plt.legend(["Zeta disease", "No Zeta disease"]);
 df[(df['age'] <= 20)
        & (df['years_smoking'] >= 20)].reset_index(drop=True)
 
-
 # In[209]:
-
-
 df[(df['age'].isin([40,41,42,43,44,45]))
        & (df['years_smoking'] >= 35)].reset_index(drop=True)
 
-
 # In[210]:
-
-
 data['age_when_smoking_started'] = np.subtract(data['age'],data['years_smoking'])
 
-
 # In[211]:
-
-
 print(len(data[data['age_when_smoking_started'] <= 15]),
       len(data[data['age_when_smoking_started'] <= 10]),
       len(data[data['age_when_smoking_started'] <= 5]))
 
-
 # In[212]:
-
-
 ####
 #   In an ideal situation, smoking started at an age of 3 should be treated as an incorrect entry.
 #   For this analysis, we are not disturbing the positive data points ('age_when_smoking_started') and we will impute the negative data points with their group means.
 ####
 
-
 # In[213]:
-
-
 age_list = data.age_label.unique().tolist()
 
 for i in age_list:
@@ -331,17 +232,11 @@ for i in age_list:
     data['years_smoking'] = np.where(data['age_when_smoking_started'] > 0, data['years_smoking'], round(X,0))
     data['years_smoking'] = data['years_smoking'].astype(int)
 
-
 # In[214]:
-
-
 # Discarding the records from the final prediction data set.
 df = data[0:800].reset_index(drop=True)
 
-
 # In[215]:
-
-
 plt.figure(figsize=(10, 7))
 
 # Scatter plot with zeta disease cases and no zeta disease cases
@@ -354,147 +249,87 @@ plt.xlabel("weight of the person")
 plt.ylabel("Years of smoking by the person")
 plt.legend(["Zeta disease", "No Zeta disease"]);
 
-
 # In[216]:
-
-
 ####
 #  1. As we can see from the above plot, people weighing over 200 lbs have smoking habits for 20 years and more.
 #  2. Lot of non-smokers weigh less than 200 lbs.
 ####
 
-
 # In[217]:
-
-
 #### Correlation matrix
-
 correlation_matrix = df.corr()
 
 fig, ax = plt.subplots(figsize=(12, 10))
 ax = sns.heatmap(correlation_matrix ,annot=True,linewidths=0.5,fmt=".2f");
 
-
 # In[218]:
-
 
 df[df.columns[0:]].corr()['zeta_disease'][:].sort_values()
 
-
 # In[219]:
-
-
 for i in cat_columns:
     df[i] = df[i].astype('object')
     
 df.dtypes
 
-
 # In[235]:
-
-
 df_actual_set = data[0:800].reset_index(drop=True)
 df_pred_set = data[800:820].reset_index(drop=True)
 
-
 # In[236]:
-
-
 X = df_actual_set.iloc[:,[0,1,2,3,4,5,6,7,9,10,11,12,13,14]]
 Y = df_actual_set.iloc[:,8]
 
-
 # In[237]:
-
-
 X_pred = df_pred_set.iloc[:,[0,1,2,3,4,5,6,7,9,10,11,12,13,14]]
 
-
 # In[238]:
-
-
 # Create dummy variables for categorical data
 
 X = pd.get_dummies(X)
 X_pred = pd.get_dummies(X_pred)
 
-
 # In[239]:
-
-
 #### Train Test split
-
 from sklearn.model_selection import train_test_split
 X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=0.25,random_state=0)
 
-
 # In[240]:
-
-
 #### Scaling using mean and std
-
 scaler_ = StandardScaler()
 X_train = scaler_.fit_transform(X_train)
 X_test = scaler_.fit_transform(X_test)
 X_pred = scaler_.fit_transform(X_pred)
 
-
 # In[241]:
-
-
 # LOGISTIC REGRESSION
-
-
 # In[242]:
-
-
 classifier_LR = LogisticRegression(C=1.0, class_weight="balanced", dual=False, fit_intercept=True,
                                    intercept_scaling=1, l1_ratio=None, max_iter=1000,
                                    multi_class='auto', n_jobs=None, penalty='l1',
                                    random_state=0, solver='saga', tol=0.001, verbose=0,
                                    warm_start=False)
 
-
 # In[250]:
-
-
 classifier_LR.fit(X_train, Y_train)
 
-
 # In[251]:
-
-
 Y_pred_LR = classifier_LR.predict(X_test)
 
-
 # In[252]:
-
-
 # Confusion matrix
-
 matrix_LR = confusion_matrix(Y_test, Y_pred_LR)
 matrix_LR
 
-
 # In[253]:
-
-
 # Print accuracy , precision and recall
-
 print(balanced_accuracy_score(Y_test, Y_pred_LR), 
       average_precision_score(Y_test, Y_pred_LR), 
       recall_score(Y_test, Y_pred_LR))
 
-
 # In[256]:
-
-
 # RANDOM FOREST CLASSIFIER
-
-
 # In[257]:
-
-
 classifier_RF = RandomForestClassifier(bootstrap=True, class_weight='balanced',
                        criterion='entropy', max_depth=None, max_features='auto',
                        max_leaf_nodes=None, min_impurity_decrease=0.0,
@@ -505,38 +340,26 @@ classifier_RF = RandomForestClassifier(bootstrap=True, class_weight='balanced',
 
 
 # In[258]:
-
-
 classifier_RF.fit(X_train, Y_train)
 
 
 # In[259]:
-
-
 Y_pred_RF = classifier_RF.predict(X_test)
 
 
 # In[260]:
-
-
 matrix_RF = confusion_matrix(Y_test, Y_pred_RF)
 matrix_RF
 
 
 # In[261]:
-
-
 print(balanced_accuracy_score(Y_test, Y_pred_RF), 
       average_precision_score(Y_test, Y_pred_RF), 
       recall_score(Y_test, Y_pred_RF))
 
 
 # In[264]:
-
-
 # IMBALANCED ENSEMBLE -- RANDOM FOREST CLASSIFIER
-
-
 # In[265]:
 
 
